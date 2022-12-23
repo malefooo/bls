@@ -9,7 +9,7 @@ import (
 
 // FQ is an element in a field.
 type FQ struct {
-	n FQRepr
+	N FQRepr
 }
 
 var bigZero = NewFQRepr(0)
@@ -35,19 +35,19 @@ func (f FQ) Copy() FQ {
 
 // IsValid checks if the element is valid.
 func (f *FQ) IsValid() bool {
-	return f.n[5]&0xf000000000000000 == 0 || f.n.Cmp(QFieldModulus) < 0
+	return f.N[5]&0xf000000000000000 == 0 || f.N.Cmp(QFieldModulus) < 0
 }
 
 func (f *FQ) reduceAssign() {
 	if !f.IsValid() {
-		f.n.SubNoBorrow(QFieldModulus)
+		f.N.SubNoBorrow(QFieldModulus)
 	}
 }
 
 // FQReprToFQ gets a pointer to a FQ given a pointer
 // to an FQRepr
 func FQReprToFQ(o FQRepr) FQ {
-	r := FQ{n: o}
+	r := FQ{N: o}
 	if r.IsValid() {
 		r.MulAssign(FQ{FQR2})
 		return r
@@ -58,32 +58,32 @@ func FQReprToFQ(o FQRepr) FQ {
 // FQReprToFQRaw gets a pointer to a FQ without converting
 // to montgomery form.
 func FQReprToFQRaw(o FQRepr) FQ {
-	return FQ{n: o}
+	return FQ{N: o}
 }
 
 // AddAssign multiplies a field element by this one.
 func (f *FQ) AddAssign(other FQ) {
-	f.n.AddNoCarry(other.n)
+	f.N.AddNoCarry(other.N)
 	f.reduceAssign()
 }
 
 func (f *FQ) montReduce(hi [6]uint64, lo [6]uint64) {
-	f.n = MontReduce(hi, lo)
+	f.N = MontReduce(hi, lo)
 	f.reduceAssign()
 }
 
 // MulAssign multiplies a field element by this one.
 func (f *FQ) MulAssign(other FQ) {
-	hi, lo := MultiplyFQRepr(f.n, other.n)
+	hi, lo := MultiplyFQRepr(f.N, other.N)
 	f.montReduce(hi, lo)
 }
 
 // SubAssign subtracts a field element from this one.
 func (f *FQ) SubAssign(other FQ) {
-	if other.n.Cmp(f.n) > 0 {
-		f.n.AddNoCarry(QFieldModulus)
+	if other.N.Cmp(f.N) > 0 {
+		f.N.AddNoCarry(QFieldModulus)
 	}
-	f.n.SubNoBorrow(other.n)
+	f.N.SubNoBorrow(other.N)
 }
 
 // DivAssign divides the field element by another
@@ -114,15 +114,15 @@ func (f FQ) Exp(n FQRepr) FQ {
 
 // Equals checks equality of two field elements.
 func (f FQ) Equals(other FQ) bool {
-	return f.n.Equals(other.n)
+	return f.N.Equals(other.N)
 }
 
 // NegAssign gets the negative value of the field element mod QFieldModulus.
 func (f *FQ) NegAssign() {
 	if !f.IsZero() {
 		tmp := QFieldModulus.Copy()
-		tmp.SubNoBorrow(f.n)
-		f.n = tmp
+		tmp.SubNoBorrow(f.N)
+		f.N = tmp
 	}
 }
 
@@ -138,36 +138,36 @@ func (f FQ) Cmp(other FQ) int {
 
 // DoubleAssign doubles the element
 func (f *FQ) DoubleAssign() {
-	f.n.Mul2()
+	f.N.Mul2()
 	f.reduceAssign()
 }
 
 // IsZero checks if the field element is zero.
 func (f FQ) IsZero() bool {
-	return f.n.Equals(bigZero)
+	return f.N.Equals(bigZero)
 }
 
 // SquareAssign squares a field element.
 func (f *FQ) SquareAssign() {
-	r1, carry := MACWithCarry(0, f.n[0], f.n[1], 0)
-	r2, carry := MACWithCarry(0, f.n[0], f.n[2], carry)
-	r3, carry := MACWithCarry(0, f.n[0], f.n[3], carry)
-	r4, carry := MACWithCarry(0, f.n[0], f.n[4], carry)
-	r5, carry := MACWithCarry(0, f.n[0], f.n[5], carry)
+	r1, carry := MACWithCarry(0, f.N[0], f.N[1], 0)
+	r2, carry := MACWithCarry(0, f.N[0], f.N[2], carry)
+	r3, carry := MACWithCarry(0, f.N[0], f.N[3], carry)
+	r4, carry := MACWithCarry(0, f.N[0], f.N[4], carry)
+	r5, carry := MACWithCarry(0, f.N[0], f.N[5], carry)
 	r6 := carry
-	r3, carry = MACWithCarry(r3, f.n[1], f.n[2], 0)
-	r4, carry = MACWithCarry(r4, f.n[1], f.n[3], carry)
-	r5, carry = MACWithCarry(r5, f.n[1], f.n[4], carry)
-	r6, carry = MACWithCarry(r6, f.n[1], f.n[5], carry)
+	r3, carry = MACWithCarry(r3, f.N[1], f.N[2], 0)
+	r4, carry = MACWithCarry(r4, f.N[1], f.N[3], carry)
+	r5, carry = MACWithCarry(r5, f.N[1], f.N[4], carry)
+	r6, carry = MACWithCarry(r6, f.N[1], f.N[5], carry)
 	r7 := carry
-	r5, carry = MACWithCarry(r5, f.n[2], f.n[3], 0)
-	r6, carry = MACWithCarry(r6, f.n[2], f.n[4], carry)
-	r7, carry = MACWithCarry(r7, f.n[2], f.n[5], carry)
+	r5, carry = MACWithCarry(r5, f.N[2], f.N[3], 0)
+	r6, carry = MACWithCarry(r6, f.N[2], f.N[4], carry)
+	r7, carry = MACWithCarry(r7, f.N[2], f.N[5], carry)
 	r8 := carry
-	r7, carry = MACWithCarry(r7, f.n[3], f.n[4], 0)
-	r8, carry = MACWithCarry(r8, f.n[3], f.n[5], carry)
+	r7, carry = MACWithCarry(r7, f.N[3], f.N[4], 0)
+	r8, carry = MACWithCarry(r8, f.N[3], f.N[5], carry)
 	r9 := carry
-	r9, carry = MACWithCarry(r9, f.n[4], f.n[5], 0)
+	r9, carry = MACWithCarry(r9, f.N[4], f.N[5], 0)
 	r10 := carry
 	r11 := r10 >> 63
 	r10 = (r10 << 1) | (r9 >> 63)
@@ -182,17 +182,17 @@ func (f *FQ) SquareAssign() {
 	r1 = r1 << 1
 
 	carry = 0
-	r0, carry := MACWithCarry(0, f.n[0], f.n[0], carry)
+	r0, carry := MACWithCarry(0, f.N[0], f.N[0], carry)
 	r1, carry = AddWithCarry(r1, 0, carry)
-	r2, carry = MACWithCarry(r2, f.n[1], f.n[1], carry)
+	r2, carry = MACWithCarry(r2, f.N[1], f.N[1], carry)
 	r3, carry = AddWithCarry(r3, 0, carry)
-	r4, carry = MACWithCarry(r4, f.n[2], f.n[2], carry)
+	r4, carry = MACWithCarry(r4, f.N[2], f.N[2], carry)
 	r5, carry = AddWithCarry(r5, 0, carry)
-	r6, carry = MACWithCarry(r6, f.n[3], f.n[3], carry)
+	r6, carry = MACWithCarry(r6, f.N[3], f.N[3], carry)
 	r7, carry = AddWithCarry(r7, 0, carry)
-	r8, carry = MACWithCarry(r8, f.n[4], f.n[4], carry)
+	r8, carry = MACWithCarry(r8, f.N[4], f.N[4], carry)
 	r9, carry = AddWithCarry(r9, 0, carry)
-	r10, carry = MACWithCarry(r10, f.n[5], f.n[5], carry)
+	r10, carry = MACWithCarry(r10, f.N[5], f.N[5], carry)
 	r11, carry = AddWithCarry(r11, 0, carry)
 	f.montReduce([6]uint64{r6, r7, r8, r9, r10, r11}, [6]uint64{r0, r1, r2, r3, r4, r5})
 }
@@ -225,7 +225,7 @@ func (f FQ) Inverse() (FQ, bool) {
 	if f.IsZero() {
 		return FQ{}, false
 	}
-	u := f.n.Copy()
+	u := f.N.Copy()
 	v := QFieldModulus.Copy()
 	b := FQReprToFQRaw(FQR2.Copy())
 	c := FQZero.Copy()
@@ -233,21 +233,21 @@ func (f FQ) Inverse() (FQ, bool) {
 	for u.Cmp(bigOne) != 0 && v.Cmp(bigOne) != 0 {
 		for isEven(u) {
 			u.Div2()
-			if isEven(b.n) {
-				b.n.Div2()
+			if isEven(b.N) {
+				b.N.Div2()
 			} else {
-				b.n.AddNoCarry(QFieldModulus)
-				b.n.Div2()
+				b.N.AddNoCarry(QFieldModulus)
+				b.N.Div2()
 			}
 		}
 
 		for isEven(v) {
 			v.Div2()
-			if isEven(c.n) {
-				c.n.Div2()
+			if isEven(c.N) {
+				c.N.Div2()
 			} else {
-				c.n.AddNoCarry(QFieldModulus)
-				c.n.Div2()
+				c.N.AddNoCarry(QFieldModulus)
+				c.N.Div2()
 			}
 		}
 
@@ -333,8 +333,8 @@ func (f *FQ) Legendre() LegendreSymbol {
 // ToRepr gets the 256-bit representation of the field element.
 func (f *FQ) ToRepr() FQRepr {
 	out := f.Copy()
-	out.montReduce([6]uint64{0, 0, 0, 0, 0, 0}, [6]uint64{f.n[0], f.n[1], f.n[2], f.n[3], f.n[4], f.n[5]})
-	return out.n
+	out.montReduce([6]uint64{0, 0, 0, 0, 0, 0}, [6]uint64{f.N[0], f.N[1], f.N[2], f.N[3], f.N[4], f.N[5]})
+	return out.N
 }
 
 // RandFQ generates a random FQ element.

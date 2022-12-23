@@ -173,10 +173,10 @@ func (g *G1Affine) SetRawBytes(uncompressed [96]byte) {
 	copy(xBytes[:], uncompressed[0:48])
 	copy(yBytes[:], uncompressed[48:96])
 	g.x = FQ{
-		n: FQReprFromBytes(xBytes),
+		N: FQReprFromBytes(xBytes),
 	}
 	g.y = FQ{
-		n: FQReprFromBytes(yBytes),
+		N: FQReprFromBytes(yBytes),
 	}
 }
 
